@@ -1,29 +1,70 @@
-import { Request, Response, NextFunction } from 'express'
-import { IGenericErrorMessage } from '../../interfaces/error
+import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
+import { Error } from 'mongoose'
+import config from '../../config'
+import ApiError from '../../errors/ApiError'
 import handleValidationError from '../../errors/handleValidationError'
 
-const globalErrorHandler = (
-  err: any,
+import { ZodError } from 'zod'
+import handleZodError from '../../errors/handleZodError'
+import { IGenericErrorMessage } from '../../interfaces/error'
+import { errorlogger } from '../../shared/logger'
+
+const globalErrorHandler: ErrorRequestHandler = (
+  error,
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const statusCode = 500
-  const message = 'Internal Server Error'
-  const errorMessages: IGenericErrorMessage[] = []
+  config.env === 'development'
+    ? console.log(`🐱‍🏍 globalErrorHandler ~~`, error)
+    : errorlogger.error(`🐱‍🏍 globalErrorHandler ~~`, error)
 
-  if (err?.name === 'ValidationError') {
-    const simplifiedError = handleValidationError(err)
+  let statusCode = 500
+  let message = 'Something went wrong !'
+  let errorMessages: IGenericErrorMessage[] = []
+
+  if (error?.name === 'ValidationError') {
+    const simplifiedError = handleValidationError(error)
+    statusCode = simplifiedError.statusCode
+    message = simplifiedError.message
+    errorMessages = simplifiedError.errorMessages
+  } else if (error instanceof ZodError) {
+    const simplifiedError = handleZodError(error)
+    statusCode = simplifiedError.statusCode
+    message = simplifiedError.message
+    errorMessages = simplifiedError.errorMessages
+  } else if (error instanceof ApiError) {
+    statusCode = error?.statusCode
+    message = error.message
+    errorMessages = error?.message
+      ? [
+          {
+            path: '',
+            message: error?.message,
+          },
+        ]
+      : []
+  } else if (error instanceof Error) {
+    message = error?.message
+    errorMessages = error?.message
+      ? [
+          {
+            path: '',
+            message: error?.message,
+          },
+        ]
+      : []
   }
 
   res.status(statusCode).json({
     success: false,
     message,
     errorMessages,
-    stack: config.env !== 'production' ? err?.stack : undefined,
+    stack: config.env !== 'production' ? error?.stack : undefined,
   })
 
   next()
 }
 
 export default globalErrorHandler
+
