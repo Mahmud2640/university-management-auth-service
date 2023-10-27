@@ -1,23 +1,14 @@
-import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
-import { Error } from 'mongoose'
+import { ErrorRequestHandler } from 'express'
 import config from '../../config'
 import ApiError from '../../errors/ApiError'
 import handleValidationError from '../../errors/handleValidationError'
-
-import { ZodError } from 'zod'
-import handleZodError from '../../errors/handleZodError'
 import { IGenericErrorMessage } from '../../interfaces/error'
-import { errorlogger } from '../../shared/logger'
+import { errorLogger } from '../../shared/logger'
 
-const globalErrorHandler: ErrorRequestHandler = (
-  error,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   config.env === 'development'
     ? console.log(`🐱‍🏍 globalErrorHandler ~~`, error)
-    : errorlogger.error(`🐱‍🏍 globalErrorHandler ~~`, error)
+    : errorLogger.error(`🐱‍🏍 globalErrorHandler ~~`, error)
 
   let statusCode = 500
   let message = 'Something went wrong !'
@@ -67,4 +58,3 @@ const globalErrorHandler: ErrorRequestHandler = (
 }
 
 export default globalErrorHandler
-
