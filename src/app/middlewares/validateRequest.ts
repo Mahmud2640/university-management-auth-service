@@ -1,6 +1,6 @@
-import { AnyZodObject } from 'zod'
-import { UserService } from '../modules/users/user.service'
-import { NextFunction, Request, Response } from 'express'
+import { AnyZodObject } from 'zod';
+import { UserService } from '../modules/users/user.service';
+import { NextFunction, Request, Response } from 'express';
 
 const validateRequest =
   (schema: AnyZodObject) =>
@@ -11,11 +11,11 @@ const validateRequest =
         query: req.query,
         params: req.params,
         cookies: req.cookies,
-      })
-      return next()
+      });
+      return next();
     } catch (error) {
-      next(error)
+      next(error);
     }
-  }
+  };
 
-export default validateRequest
+export default validateRequest;
